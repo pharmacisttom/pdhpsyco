@@ -25,7 +25,7 @@ function doPost(e) {
       data.device || "",
       data.page || "",
       data.user_agent || "",
-      data.phone || "",
+      data.phone ? "'" + data.phone : "", // ใส่ ' นำหน้าเพื่อให้ Google Sheet มองเป็นข้อความ (ไม่ตัดเลข 0)
       data.score || "",
       data.interpretation || "",
       "รอดำเนินการ" // ค่าเริ่มต้นสำหรับ Status
@@ -87,15 +87,22 @@ function getDashboardData() {
   // ข้ามแถวที่ 1 (หัวตาราง)
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    const phone = row[5]; // คอลัมน์ F (Index 5)
+    const phoneRaw = row[5]; // คอลัมน์ F (Index 5)
     
     // ดึงเฉพาะคนที่มีเบอร์โทร
-    if (phone && String(phone).trim() !== "") {
+    if (phoneRaw && String(phoneRaw).trim() !== "") {
+      let phoneStr = String(phoneRaw).trim();
+      
+      // เผื่อกรณีข้อมูลเก่าที่โดน Google Sheet ตัดเลข 0 ไปแล้ว (เหลือ 9 หลัก) ให้เติม 0 กลับเข้าไป
+      if (phoneStr.length === 9 && !phoneStr.startsWith('0')) {
+        phoneStr = '0' + phoneStr;
+      }
+
       result.push({
         rowNumber: i + 1, // เก็บเลขแถวไว้ใช้ตอนอัปเดตสถานะ
         timestamp: row[0],
         formType: row[1],
-        phone: row[5],
+        phone: phoneStr,
         score: row[6],
         interpretation: row[7],
         status: row[8] || "รอดำเนินการ"
