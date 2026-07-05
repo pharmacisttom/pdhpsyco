@@ -1,14 +1,18 @@
 import React from 'react';
 import '../index.css';
+import logo from '../assets/pdh.jfif';
 
 function Home({ onNavigate }) {
   return (
     <div className="container" style={{ maxWidth: '1200px' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: '600' }}>แบบคัดกรองสุขภาพจิต</h1>
-          <p style={{ color: 'var(--text-muted)' }}>เลือกแบบประเมินที่ต้องการทำ (ใช้เวลาสั้น • ข้อมูลไม่ถูกบันทึก • ใช้ได้บนมือถือ)</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <img src={logo} alt="PDH Logo" style={{ height: '70px', borderRadius: '12px', objectFit: 'cover' }} />
+          <div>
+            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: '600' }}>แบบคัดกรองสุขภาพจิต</h1>
+            <p style={{ color: 'var(--text-muted)' }}>เลือกแบบประเมินที่ต้องการทำ (ใช้เวลาสั้น • ข้อมูลไม่ถูกบันทึก • ใช้ได้บนมือถือ)</p>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
           {/* Mock theme buttons just for aesthetics based on user image */}
