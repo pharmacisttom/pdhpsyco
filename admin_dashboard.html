@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <title>PDH Admin Dashboard</title>
+    <style>
+      :root {
+        --primary: #2d6a4f;
+        --primary-light: #e6f2eb;
+        --text: #333;
+        --text-muted: #666;
+        --bg: #f5f7f6;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      }
+      h2 {
+        color: var(--primary);
+        text-align: center;
+        margin-top: 0;
+      }
+      
+      /* Login Screen */
+      #login-screen {
+        max-width: 400px;
+        margin: 50px auto;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+      }
+      input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+      button {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .error-msg {
+        color: red;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      /* Dashboard Screen */
+      #dashboard-screen {
+        display: none;
+      }
+      .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .btn-logout {
+        background-color: #dc3545;
+        width: auto;
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background-color: var(--primary-light);
+        color: var(--primary);
+      }
+      tr:hover {
+        background-color: #f9f9f9;
+      }
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-done {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="container">
+      <h2>ระบบจัดการ PDH Screening</h2>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="กรอก Username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="กรอก Password">
+      </div>
+      <button onclick="doLogin()" id="loginBtn">เข้าสู่ระบบ</button>
+      <div id="loginError" class="error-msg"></div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboard-screen" class="container">
+      <div class="header-flex">
+        <h2>รายชื่อผู้รอการติดต่อกลับ</h2>
+        <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+      </div>
+      
+      <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
+      
+      <div style="overflow-x: auto;">
+        <table id="dataTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>วันที่/เวลา</th>
+              <th>ประเภท</th>
+              <th>เบอร์โทรศัพท์</th>
+              <th>คะแนน</th>
+              <th>ผลประเมิน</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Data will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function doLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const btn = document.getElementById('loginBtn');
+        const error = document.getElementById('loginError');
+        
+        if(!user || !pass) {
+          error.innerText = "กรุณากรอกข้อมูลให้ครบถ้วน";
+          return;
+        }
+
+        btn.innerText = "กำลังตรวจสอบ...";
+        btn.disabled = true;
+        error.innerText = "";
+
+        // เรียกใช้ฟังก์ชัน checkLogin ใน Code.gs
+        google.script.run
+          .withSuccessHandler(function(isSuccess) {
+            if (isSuccess) {
+              document.getElementById('login-screen').style.display = 'none';
+              document.getElementById('dashboard-screen').style.display = 'block';
+              loadData(); // โหลดข้อมูลเมื่อล็อกอินผ่าน
+            } else {
+              error.innerText = "Username หรือ Password ไม่ถูกต้อง";
+              btn.innerText = "เข้าสู่ระบบ";
+              btn.disabled = false;
+            }
+          })
+          .withFailureHandler(function(err) {
+            error.innerText = "เกิดข้อผิดพลาด: " + err.message;
+            btn.innerText = "เข้าสู่ระบบ";
+            btn.disabled = false;
+          })
+          .checkLogin(user, pass);
+      }
+
+      function logout() {
+        document.getElementById('dashboard-screen').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'block';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginBtn').innerText = "เข้าสู่ระบบ";
+        document.getElementById('loginBtn').disabled = false;
+      }
+
+      function loadData() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('dataTable').style.display = 'none';
+        
+        google.script.run
+          .withSuccessHandler(function(data) {
+            renderTable(data);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dataTable').style.display = 'table';
+          })
+          .getDashboardData();
+      }
+
+      function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">ไม่มีข้อมูลผู้รอการติดต่อ</td></tr>';
+          return;
+        }
+
+        data.forEach(function(row) {
+          const dateObj = new Date(row.timestamp);
+          const dateStr = dateObj.toLocaleDateString('th-TH') + ' ' + dateObj.toLocaleTimeString('th-TH');
+          
+          const isDone = row.status === "ติดต่อแล้ว";
+          const badgeClass = isDone ? "status-done" : "status-pending";
+          
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${dateStr}</td>
+            <td>${row.formType}</td>
+            <td style="font-weight: bold; color: var(--primary);">${row.phone}</td>
+            <td style="text-align: center;">${row.score}</td>
+            <td>${row.interpretation}</td>
+            <td><span id="status-${row.rowNumber}" class="status-badge ${badgeClass}">${row.status}</span></td>
+            <td>
+              <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: normal;">
+                <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleStatus(this, ${row.rowNumber})">
+                ติดต่อแล้ว
+              </label>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function toggleStatus(checkbox, rowNumber) {
+        const isChecked = checkbox.checked;
+        const statusSpan = document.getElementById(`status-${rowNumber}`);
+        
+        // แสดงสถานะกำลังโหลดชั่วคราว
+        statusSpan.innerText = "...";
+        checkbox.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function(newStatus) {
+            statusSpan.innerText = newStatus;
+            checkbox.disabled = false;
+            if(newStatus === "ติดต่อแล้ว") {
+              statusSpan.className = "status-badge status-done";
+            } else {
+              statusSpan.className = "status-badge status-pending";
+            }
+          })
+          .withFailureHandler(function() {
+            alert("อัปเดตไม่สำเร็จ กรุณาลองใหม่");
+            checkbox.checked = !isChecked; // คืนค่ากลับ
+            checkbox.disabled = false;
+            statusSpan.innerText = !isChecked ? "ติดต่อแล้ว" : "รอดำเนินการ";
+          })
+          .markAsContacted(rowNumber, isChecked);
+      }
+    </script>
+  </body>
+</html>

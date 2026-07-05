@@ -54,53 +54,24 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-## วิธีการรับ URL ของ Google Apps Script
+## วิธีการติดตั้งระบบหลังบ้าน (Admin Dashboard) บน Google Apps Script
 
-เพื่อเก็บสถิติการเข้าใช้งาน (ไม่เก็บข้อมูลส่วนบุคคล) ไปยัง Google Sheet ของคุณ (ID: `1Q_sYf4rcb1GB98LQj19SGKxKSPDk1TQ4LL_4POoLZeY`):
+ระบบนี้ใช้สำหรับเก็บสถิติและเป็นระบบหลังบ้านสำหรับเจ้าหน้าที่
 
-1. เปิด Google Sheet ของคุณ
+1. เปิด Google Sheet ของคุณ (สร้าง Tab ชื่อ `usage_log` และ `user` ให้เรียบร้อย)
 2. ไปที่เมนู **ส่วนขยาย (Extensions)** > **Apps Script**
-3. คัดลอกโค้ดด้านล่างไปวางทับโค้ดเดิมทั้งหมด:
-
-```javascript
-const SHEET_ID = '1Q_sYf4rcb1GB98LQj19SGKxKSPDk1TQ4LL_4POoLZeY';
-
-function doPost(e) {
-  try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-    const data = JSON.parse(e.postData.contents);
-    
-    // หากเพิ่งสร้างชีตใหม่ ให้ใส่หัวตาราง
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation"]);
-    }
-    
-    sheet.appendRow([
-      data.timestamp || new Date(),
-      data.form_type || "",
-      data.device || "",
-      data.page || "",
-      data.user_agent || "",
-      data.phone || "",
-      data.score || "",
-      data.interpretation || ""
-    ]);
-    
-    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": error.message}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-```
-
-4. กดปุ่ม **ทำให้ใช้งานได้ (Deploy)** > **การทำให้ใช้งานได้รายการใหม่ (New deployment)**
-5. เลือกประเภท: **เว็บแอป (Web app)**
-6. สิทธิ์การเข้าถึง (Who has access): เลือก **ทุกคน (Anyone)**
-7. กด **ทำให้ใช้งานได้ (Deploy)** (อาจจะต้องกดยอมรับสิทธิ์)
-8. คัดลอก **URL ของเว็บแอป (Web app URL)**
-9. นำ URL ไปวางในไฟล์ `src/config.js` ในตัวแปร `GOOGLE_SCRIPT_URL` แล้ว Commit/Push โค้ดอีกครั้ง
+3. **ไฟล์ Code.gs:** คัดลอกโค้ดทั้งหมดจากไฟล์ `google_apps_script.js` ในโฟลเดอร์นี้ ไปวางทับโค้ดเดิมใน `Code.gs`
+4. **ไฟล์ Index.html:** 
+   - กดปุ่ม `+` เพิ่มไฟล์ใหม่ เลือก **HTML**
+   - ตั้งชื่อไฟล์ว่า `Index` (ตัว I พิมพ์ใหญ่)
+   - คัดลอกโค้ดทั้งหมดจากไฟล์ `admin_dashboard.html` ไปวางทับในไฟล์ `Index.html`
+5. กดปุ่ม **ทำให้ใช้งานได้ (Deploy)** > **การทำให้ใช้งานได้รายการใหม่ (New deployment)**
+6. เลือกประเภท: **เว็บแอป (Web app)**
+7. สิทธิ์การเข้าถึง (Who has access): เลือก **ทุกคน (Anyone)**
+8. กด **ทำให้ใช้งานได้ (Deploy)** (กดยอมรับสิทธิ์ตามที่ระบบแจ้ง)
+9. คัดลอก **URL ของเว็บแอป (Web app URL)**
+10. นำ URL ไปวางในไฟล์ `src/config.js` ในตัวแปร `GOOGLE_SCRIPT_URL` แล้ว Commit/Push โค้ดอีกครั้ง
+11. **สำหรับเจ้าหน้าที่:** สามารถใช้ URL ของเว็บแอป (Web app URL) นี้เปิดในเบราว์เซอร์ เพื่อเข้าสู่ระบบหลังบ้าน (Admin Dashboard) ได้เลย
 
 ## การสร้าง QR Code
 หลังจากนำขึ้น GitHub Pages สำเร็จ จะได้ URL เช่น `https://pharmacisttom.github.io/pdhpsyco/` 
