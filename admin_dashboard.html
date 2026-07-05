@@ -94,6 +94,60 @@
         padding: 6px 12px;
         font-size: 14px;
       }
+      
+      /* Tabs */
+      .tabs {
+        display: flex;
+        border-bottom: 2px solid #ddd;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-muted);
+        border-bottom: 3px solid transparent;
+      }
+      .tab.active {
+        color: var(--primary);
+        border-bottom: 3px solid var(--primary);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Stats Cards */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      .stat-card {
+        background: var(--primary-light);
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #c3e6cb;
+      }
+      .stat-card.main {
+        background: var(--primary);
+        color: white;
+      }
+      .stat-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+      }
+
+      /* Table */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -152,29 +206,73 @@
     <!-- Dashboard Screen -->
     <div id="dashboard-screen" class="container">
       <div class="header-flex">
-        <h2>รายชื่อผู้รอการติดต่อกลับ</h2>
+        <h2 style="margin: 0;">PDH Admin Dashboard</h2>
         <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
       </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('stats')">📊 สถิติภาพรวม</div>
+        <div class="tab" onclick="switchTab('contacts')">📞 ผู้รอการติดต่อกลับ</div>
+      </div>
       
-      <div id="loading" class="loading">กำลังโหลดข้อมูล...</div>
-      
-      <div style="overflow-x: auto;">
-        <table id="dataTable" style="display: none;">
-          <thead>
-            <tr>
-              <th>วันที่/เวลา</th>
-              <th>ประเภท</th>
-              <th>เบอร์โทรศัพท์</th>
-              <th>คะแนน</th>
-              <th>ผลประเมิน</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <!-- Data will go here -->
-          </tbody>
-        </table>
+      <!-- Stats Tab -->
+      <div id="tab-stats" class="tab-content active">
+        <div id="loadingStats" class="loading">กำลังโหลดสถิติ...</div>
+        <div id="statsContent" style="display: none;">
+          <div class="stats-grid">
+            <div class="stat-card main">
+              <div class="stat-title">ผู้เข้าใช้งานทั้งหมด</div>
+              <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">คัดกรองซึมเศร้า (2Q-9Q)</div>
+              <div class="stat-value" id="stat2Q">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">คัดกรองเครียด (SPST-20)</div>
+              <div class="stat-value" id="statSPST">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">ดัชนีความสุข (THI-15)</div>
+              <div class="stat-value" id="statTHI">0</div>
+            </div>
+          </div>
+          <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card" style="background: #e9ecef; border-color: #ced4da;">
+              <div class="stat-title">ใช้งานผ่านมือถือ (Mobile)</div>
+              <div class="stat-value" id="statMobile">0</div>
+            </div>
+            <div class="stat-card" style="background: #e9ecef; border-color: #ced4da;">
+              <div class="stat-title">ใช้งานผ่านคอมพิวเตอร์ (PC)</div>
+              <div class="stat-value" id="statDesktop">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacts Tab -->
+      <div id="tab-contacts" class="tab-content">
+        <div id="loadingContacts" class="loading">กำลังโหลดข้อมูลผู้รอการติดต่อ...</div>
+        
+        <div style="overflow-x: auto;">
+          <table id="dataTable" style="display: none;">
+            <thead>
+              <tr>
+                <th>วันที่/เวลา</th>
+                <th>ประเภท</th>
+                <th>เบอร์โทรศัพท์</th>
+                <th>คะแนน</th>
+                <th>ผลประเมิน</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Data will go here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -194,13 +292,12 @@
         btn.disabled = true;
         error.innerText = "";
 
-        // เรียกใช้ฟังก์ชัน checkLogin ใน Code.gs
         google.script.run
           .withSuccessHandler(function(isSuccess) {
             if (isSuccess) {
               document.getElementById('login-screen').style.display = 'none';
               document.getElementById('dashboard-screen').style.display = 'block';
-              loadData(); // โหลดข้อมูลเมื่อล็อกอินผ่าน
+              loadAllData(); // โหลดข้อมูลทั้งสอง Tab
             } else {
               error.innerText = "Username หรือ Password ไม่ถูกต้อง";
               btn.innerText = "เข้าสู่ระบบ";
@@ -224,14 +321,52 @@
         document.getElementById('loginBtn').disabled = false;
       }
 
-      function loadData() {
-        document.getElementById('loading').style.display = 'block';
+      function switchTab(tabName) {
+        // อัปเดตเมนู
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        // อัปเดตเนื้อหา
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+      }
+
+      function loadAllData() {
+        loadStats();
+        loadContacts();
+      }
+
+      // --- ฟังก์ชันสำหรับโหลดและแสดงสถิติ ---
+      function loadStats() {
+        document.getElementById('loadingStats').style.display = 'block';
+        document.getElementById('statsContent').style.display = 'none';
+        
+        google.script.run
+          .withSuccessHandler(function(data) {
+            if (data) {
+              document.getElementById('statTotal').innerText = data.total;
+              document.getElementById('stat2Q').innerText = data.forms['2Q-9Q'] || 0;
+              document.getElementById('statSPST').innerText = data.forms['SPST-20'] || 0;
+              document.getElementById('statTHI').innerText = data.forms['THI-15'] || 0;
+              
+              document.getElementById('statMobile').innerText = data.devices['mobile'] || 0;
+              document.getElementById('statDesktop').innerText = data.devices['desktop'] || 0;
+            }
+            document.getElementById('loadingStats').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'block';
+          })
+          .getStatistics();
+      }
+
+      // --- ฟังก์ชันสำหรับโหลดและแสดงผู้รอติดต่อ ---
+      function loadContacts() {
+        document.getElementById('loadingContacts').style.display = 'block';
         document.getElementById('dataTable').style.display = 'none';
         
         google.script.run
           .withSuccessHandler(function(data) {
             renderTable(data);
-            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loadingContacts').style.display = 'none';
             document.getElementById('dataTable').style.display = 'table';
           })
           .getDashboardData();

@@ -130,3 +130,46 @@ function markAsContacted(rowNumber, isContacted) {
   sheet.getRange(rowNumber, statusCol).setValue(newStatus);
   return newStatus;
 }
+
+// ==========================================
+// 6. ฟังก์ชันดึงสถิติผู้ใช้งาน
+// ==========================================
+function getStatistics() {
+  const doc = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = doc.getSheetByName('usage_log');
+  
+  if (!sheet) return null;
+  
+  const data = sheet.getDataRange().getValues();
+  
+  let totalVisits = 0;
+  let formCounts = { "2Q-9Q": 0, "SPST-20": 0, "THI-15": 0 };
+  let deviceCounts = { "mobile": 0, "desktop": 0, "tablet": 0 };
+  
+  // ข้ามหัวตารางแถวแรก
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    // ถ้าแถวว่าง ไม่มี timestamp ถือว่าไม่มีข้อมูล
+    if (!row[0]) continue; 
+    
+    totalVisits++;
+    
+    const formType = String(row[1]).trim();
+    if (formCounts[formType] !== undefined) {
+      formCounts[formType]++;
+    } else if (formType) {
+      formCounts[formType] = 1; // แบบประเมินอื่นๆ เผื่อมี
+    }
+    
+    const device = String(row[2]).trim().toLowerCase();
+    if (deviceCounts[device] !== undefined) {
+      deviceCounts[device]++;
+    }
+  }
+  
+  return {
+    total: totalVisits,
+    forms: formCounts,
+    devices: deviceCounts
+  };
+}
