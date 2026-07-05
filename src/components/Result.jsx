@@ -1,6 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { logContact } from '../services/logger';
 
 function Result({ title, score, interpretation, recommendation, isHighRisk, onNavigate, onRetry }) {
+  const [phone, setPhone] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handlePhoneSubmit = () => {
+    if (!phone) return;
+    logContact(title, phone, score, interpretation);
+    setIsSubmitted(true);
+  };
+
   return (
     <div className="container" style={{ maxWidth: '600px', marginTop: '2rem' }}>
       <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
@@ -22,10 +32,37 @@ function Result({ title, score, interpretation, recommendation, isHighRisk, onNa
         )}
 
         {isHighRisk && (
-          <div style={{ backgroundColor: '#ffebee', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', color: '#c62828', textAlign: 'left', border: '1px solid #ef9a9a' }}>
+          <div style={{ backgroundColor: '#ffebee', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', color: '#c62828', textAlign: 'left', border: '1px solid #ef9a9a' }}>
             <p><strong>⚠️ ข้อควรระวัง: </strong>หากมีความคิดทำร้ายตนเอง หรือรู้สึกไม่ปลอดภัย กรุณาติดต่อบุคลากรสาธารณสุขใกล้บ้าน หรือสายด่วนสุขภาพจิต 1323</p>
           </div>
         )}
+
+        <div style={{ backgroundColor: '#f9f9f9', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', border: '1px solid #e0e0e0', textAlign: 'left' }}>
+          <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>ให้เจ้าหน้าที่ติดต่อกลับ (ข้อมูลจะถูกเก็บเป็นความลับ)</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>หากคุณต้องการให้ผู้เชี่ยวชาญให้คำปรึกษาเพิ่มเติม สามารถทิ้งเบอร์โทรศัพท์ไว้ได้ (ไม่บังคับ)</p>
+          
+          {!isSubmitted ? (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <input 
+                type="tel" 
+                placeholder="กรอกเบอร์โทรศัพท์..." 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #ccc', outline: 'none', minWidth: '200px' }}
+              />
+              <button 
+                onClick={handlePhoneSubmit}
+                style={{ background: 'var(--text-main)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+              >
+                ส่งเบอร์โทร
+              </button>
+            </div>
+          ) : (
+            <div style={{ padding: '0.8rem', backgroundColor: '#e6f2eb', color: '#2d6a4f', borderRadius: '8px', textAlign: 'center', fontWeight: '500' }}>
+              ✓ ส่งข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่จะติดต่อกลับไปครับ/ค่ะ
+            </div>
+          )}
+        </div>
 
         <p className="mb-4" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           ผลนี้เป็นการคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัยทางการแพทย์

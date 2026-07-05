@@ -42,3 +42,31 @@ function getDeviceType() {
   }
   return "desktop";
 }
+
+export const logContact = async (formType, phone, score, interpretation) => {
+  if (!GOOGLE_SCRIPT_URL) return;
+  
+  const payload = {
+    timestamp: new Date().toISOString(),
+    form_type: formType,
+    device: getDeviceType(),
+    page: window.location.pathname,
+    user_agent: navigator.userAgent,
+    phone: phone,
+    score: score,
+    interpretation: interpretation
+  };
+
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.error('Failed to log contact:', error);
+  }
+};

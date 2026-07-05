@@ -72,7 +72,7 @@ function doPost(e) {
     
     // หากเพิ่งสร้างชีตใหม่ ให้ใส่หัวตาราง
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent"]);
+      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation"]);
     }
     
     sheet.appendRow([
@@ -80,7 +80,10 @@ function doPost(e) {
       data.form_type || "",
       data.device || "",
       data.page || "",
-      data.user_agent || ""
+      data.user_agent || "",
+      data.phone || "",
+      data.score || "",
+      data.interpretation || ""
     ]);
     
     return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
