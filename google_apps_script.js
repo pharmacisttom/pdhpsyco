@@ -16,7 +16,7 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation", "Status"]);
+      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation", "Status", "Name"]);
     }
     
     sheet.appendRow([
@@ -28,8 +28,14 @@ function doPost(e) {
       data.phone ? "'" + data.phone : "", // ใส่ ' นำหน้าเพื่อให้ Google Sheet มองเป็นข้อความ (ไม่ตัดเลข 0)
       data.score || "",
       data.interpretation || "",
-      "รอดำเนินการ" // ค่าเริ่มต้นสำหรับ Status
+      "รอดำเนินการ", // ค่าเริ่มต้นสำหรับ Status
+      data.name || ""
     ]);
+    
+    // แจ้งเตือน Telegram เมื่อมีการส่งเบอร์โทรศัพท์
+    if (data.phone) {
+      sendTelegramNotification(data);
+    }
     
     return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -105,7 +111,8 @@ function getDashboardData() {
         phone: phoneStr,
         score: row[6],
         interpretation: row[7],
-        status: row[8] || "รอดำเนินการ"
+        status: row[8] || "รอดำเนินการ",
+        name: row[9] || "-"
       });
     }
   }
@@ -172,4 +179,46 @@ function getStatistics() {
     forms: formCounts,
     devices: deviceCounts
   };
+}
+
+// ==========================================
+// 7. แจ้งเตือนผ่าน Telegram
+// ==========================================
+// *** กรุณาใส่ Token และ Chat ID ของคุณ ***
+const TELEGRAM_BOT_TOKEN = '8951608283:AAGXgl-4FXYmFhRUN_LueZfuCdMj_Z76Khs';
+const TELEGRAM_CHAT_ID = '7120624882';
+
+function sendTelegramNotification(data) {
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'YOUR_TELEGRAM_BOT_TOKEN') {
+    return; // ยังไม่ได้ตั้งค่า Token
+  }
+  
+  const text = `🚨 <b>มีการขอรับคำปรึกษาใหม่ (มีเบอร์โทร)</b>\n\n` +
+               `<b>ชื่อผู้ติดต่อ:</b> ${data.name || '-'}\n` +
+               `<b>แบบประเมิน:</b> ${data.form_type || '-'}\n` +
+               `<b>คะแนน:</b> ${data.score || '-'}\n` +
+               `<b>ผลประเมิน:</b> ${data.interpretation || '-'}\n` +
+               `<b>เบอร์ติดต่อ:</b> ${data.phone}\n` +
+               `<b>เวลา:</b> ${data.timestamp || new Date().toLocaleString()}`;
+               
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  
+  const payload = {
+    chat_id: TELEGRAM_CHAT_ID,
+    text: text,
+    parse_mode: "HTML"
+  };
+  
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+  
+  try {
+    UrlFetchApp.fetch(url, options);
+  } catch (e) {
+    console.error("Telegram Error: " + e.message);
+  }
 }

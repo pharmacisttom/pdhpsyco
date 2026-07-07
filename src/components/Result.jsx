@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { logContact } from '../services/logger';
 
 function Result({ title, score, interpretation, recommendation, isHighRisk, onNavigate, onRetry }) {
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handlePhoneSubmit = () => {
     if (!phone) return;
-    logContact(title, phone, score, interpretation);
+    logContact(title, name, phone, score, interpretation);
     setIsSubmitted(true);
   };
 
@@ -38,23 +39,30 @@ function Result({ title, score, interpretation, recommendation, isHighRisk, onNa
         )}
 
         <div style={{ backgroundColor: '#f9f9f9', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', border: '1px solid #e0e0e0', textAlign: 'left' }}>
-          <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>ให้เจ้าหน้าที่ติดต่อกลับ (ข้อมูลจะถูกเก็บเป็นความลับ)</p>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>หากคุณต้องการให้ผู้เชี่ยวชาญให้คำปรึกษาเพิ่มเติม สามารถทิ้งเบอร์โทรศัพท์ไว้ได้ (ไม่บังคับ)</p>
+          <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>ให้เจ้าหน้าที่ติดต่อกลับ</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>หากคุณต้องการให้ผู้เชี่ยวชาญให้คำปรึกษาเพิ่มเติม สามารถทิ้งชื่อและเบอร์โทรศัพท์ไว้ได้ (ไม่บังคับ)<br/><span style={{color: 'var(--text-main)', fontWeight: '500'}}>ข้อมูลของคุณจะถูกเก็บเป็นความลับสูงสุด</span></p>
           
           {!isSubmitted ? (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', flexDirection: 'column' }}>
+              <input 
+                type="text" 
+                placeholder="ชื่อเล่น หรือชื่อผู้ติดต่อ..." 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #ccc', outline: 'none' }}
+              />
               <input 
                 type="tel" 
                 placeholder="กรอกเบอร์โทรศัพท์..." 
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #ccc', outline: 'none', minWidth: '200px' }}
+                style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #ccc', outline: 'none' }}
               />
               <button 
                 onClick={handlePhoneSubmit}
-                style={{ background: 'var(--text-main)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                style={{ background: 'var(--text-main)', color: 'white', padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500', alignSelf: 'flex-start' }}
               >
-                ส่งเบอร์โทร
+                ส่งข้อมูลติดต่อ
               </button>
             </div>
           ) : (

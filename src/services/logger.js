@@ -43,7 +43,7 @@ function getDeviceType() {
   return "desktop";
 }
 
-export const logContact = async (formType, phone, score, interpretation) => {
+export const logContact = async (formType, name, phone, score, interpretation) => {
   if (!GOOGLE_SCRIPT_URL) return;
   
   const payload = {
@@ -52,6 +52,7 @@ export const logContact = async (formType, phone, score, interpretation) => {
     device: getDeviceType(),
     page: window.location.pathname,
     user_agent: navigator.userAgent,
+    name: name,
     phone: phone,
     score: score,
     interpretation: interpretation
