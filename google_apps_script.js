@@ -16,7 +16,13 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation", "Status", "Name"]);
+      sheet.appendRow(["Timestamp", "Form Type", "Device", "Page", "User Agent", "Phone Number", "Score", "Interpretation", "Status", "Name", "Send"]);
+    }
+    
+    let isSent = 0;
+    // แจ้งเตือน Telegram เมื่อมีการส่งเบอร์โทรศัพท์
+    if (data.phone) {
+      isSent = sendTelegramNotification(data) ? 1 : 0;
     }
     
     sheet.appendRow([
@@ -29,13 +35,9 @@ function doPost(e) {
       data.score || "",
       data.interpretation || "",
       "รอดำเนินการ", // ค่าเริ่มต้นสำหรับ Status
-      data.name || ""
+      data.name || "",
+      isSent
     ]);
-    
-    // แจ้งเตือน Telegram เมื่อมีการส่งเบอร์โทรศัพท์
-    if (data.phone) {
-      sendTelegramNotification(data);
-    }
     
     return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -190,7 +192,7 @@ const TELEGRAM_CHAT_ID = '7120624882';
 
 function sendTelegramNotification(data) {
   if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'YOUR_TELEGRAM_BOT_TOKEN') {
-    return; // ยังไม่ได้ตั้งค่า Token
+    return false; // ยังไม่ได้ตั้งค่า Token
   }
   
   const text = `🚨 <b>มีการขอรับคำปรึกษาใหม่ (มีเบอร์โทร)</b>\n\n` +
@@ -217,8 +219,14 @@ function sendTelegramNotification(data) {
   };
   
   try {
-    UrlFetchApp.fetch(url, options);
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+    if (responseCode === 200) {
+      return true;
+    }
+    return false;
   } catch (e) {
     console.error("Telegram Error: " + e.message);
+    return false;
   }
 }
